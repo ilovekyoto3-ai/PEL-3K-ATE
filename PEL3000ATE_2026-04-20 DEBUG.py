@@ -377,7 +377,7 @@ class frmTestRecord(QMdiSubWindow, Ui_frmTRecord):
                 , Deviation as 主偏差值, Deviation_Expect as 偏差期望值
                 , Deviation_LowLimit as 偏差下限, Deviation_UpLimit as 偏差上限
                 , Comment as 備註 , TDatetime as 測試日期時間, cond_Fixture as 治具條件, cond_DUT as 條件_DUT
-                from TestRecord where TestDocNo='{self.TestDocNo}' """
+                from TestRecord_PEL3K where TestDocNo='{self.TestDocNo}' """
             self.model.setQuery(query_str, db=self.db)
             self.tbview.setModel(self.model)
         except Exception as e:
@@ -1162,7 +1162,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                         sSql=f"select Name, Max(Version) as Version from TestScript group by Name having name='{self.cboScript.currentText()}'"
                         rsVer=AteDB.Query(sSql)
                         self.ltxtScriptVer.setText(rsVer[0][1])     #設定版本為最新版本
-                        sSql=f'''insert into TestRecord (TestDocNo, ScriptName, ScriptVersion, ItemNo, SubItemNo, TestPointNo, ItemNo, ItemName, ItemName_2t, ItemName_3t, CondName_1, Cond_1, CondUnit_1, 
+                        sSql=f'''insert into TestRecord_PEL3K (TestDocNo, ScriptName, ScriptVersion, ItemNo, SubItemNo, TestPointNo, ItemNo, ItemName, ItemName_2t, ItemName_3t, CondName_1, Cond_1, CondUnit_1, 
                                 CondName_2, Cond_2, CondUnit_2, CondName_3, Cond_3, CondUnit_3, Expect, ExpectUnit, LowLimit, UpLimit, Deviation_Expect, Deviation_LowLimit, Deviation_UpLimit, Cond_Fixture, Cond_DUT,Comment)
                                 select '{TNo}', name, Version, ItemNo, SubItemNo, TestPointNo, ItemNo, ItemName, ItemName_2t, ItemName_3t, CondName_1, Cond_1, CondUnit_1, 
                                 CondName_2, Cond_2, CondUnit_2, CondName_3, Cond_3, CondUnit_3,Expect, ExpectUnit, LowLimit, UpLimit, Deviation_Expect, Deviation_LowLimit, Deviation_UpLimit, Cond_Fixture, Cond_DUT,Comment 
@@ -1201,7 +1201,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                             SUM(CASE WHEN Judge = 'PASS' THEN 1 ELSE 0 END) 'PASS' ,
                             SUM(CASE WHEN Judge = 'FAIL' THEN 1 ELSE 0 END) 'FAIL' ,
                             SUM(CASE WHEN Judge <> 'PASS' AND Judge <> 'FAIL' THEN 1 ELSE 0 END) '其他'
-                        FROM TestRecord GROUP BY TestDocNo ) B ON A.TestDocNo = B.TestDocNo
+                        FROM TestRecord_PEL3K GROUP BY TestDocNo ) B ON A.TestDocNo = B.TestDocNo
                     WHERE A.TestDocNo='{TDocNo}'"""
             rsTResult=AteDB.Query(sSql)
             TJF=0
@@ -1221,7 +1221,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                             SUM(CASE WHEN Judge = 'PASS' THEN 1 ELSE 0 END) 'PASS' ,
                             SUM(CASE WHEN Judge = 'FAIL' THEN 1 ELSE 0 END) 'FAIL' ,
                             SUM(CASE WHEN Judge <> 'PASS' AND Judge <> 'FAIL' THEN 1 ELSE 0 END) '其他'
-                        FROM TestRecord GROUP BY TestDocNo ) B ON A.TestDocNo = B.TestDocNo
+                        FROM TestRecord_PEL3K GROUP BY TestDocNo ) B ON A.TestDocNo = B.TestDocNo
                     WHERE A.TestDocNo='{TDocNo}'"""
                 rsTResult=AteDB.Query(sSql)
                 if rsTResult[0][2]==rsTResult[0][5]:
@@ -1248,7 +1248,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
         try:
             AteDB.ConnectSQLite(self.DBPth)
             TDocNo=self.cboReportNo.currentText()
-            sSql=f'select distinct ItemNo, ItemName, ScriptName from TestRecord where TestDocNo=\'{TDocNo}\' order by ItemNo'            
+            sSql=f'select distinct ItemNo, ItemName, ScriptName from TestRecord_PEL3K where TestDocNo=\'{TDocNo}\' order by ItemNo'            
             rsTItem=AteDB.Query(sSql)        
             AteDB.CloseConnection()
         except Exception as e:            
@@ -1262,7 +1262,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
         try:            
             AteDB.ConnectSQLite(self.DBPth)
             TDocNo=self.cboReportNo.currentText()
-            sSql=f'select distinct Cond_Fixture from TestRecord where TestDocNo=\'{TDocNo}\''
+            sSql=f'select distinct Cond_Fixture from TestRecord_PEL3K where TestDocNo=\'{TDocNo}\''
             rsFix=AteDB.Query(sSql)        
             AteDB.CloseConnection()            
             j=len(rsFix)-1
@@ -1321,7 +1321,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
         SerNo=self.ltxtDUTSn.text()
         try:
             AteDB.ConnectSQLite(self.DBPth)            
-            sSql=f"select distinct TestDocNo from TestRecord where TestDocNo like '{SerNo}_%' order by TestDocNo desc"   
+            sSql=f"select distinct TestDocNo from TestRecord_PEL3K where TestDocNo like '{SerNo}_%' order by TestDocNo desc"   
             print(sSql)           
             rsDNo=AteDB.Query(sSql)        
             AteDB.CloseConnection()
@@ -1478,11 +1478,11 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
         try:       
             if self.db.open():
                 query=QSqlQuery(self.db)
-                self.Table_Add_Colum("TestRecord","Datetime_Upload","Datetime")
+                self.Table_Add_Colum("TestRecord_PEL3K","Datetime_Upload","Datetime")
                 self.Table_Add_Colum("TestSummary","Datetime_Upload","Datetime")
                 self.Table_Add_Colum("TestScript","Version", "Text")
                 self.Table_Add_Colum("TestSummary","ScriptVersion", "Text")
-                self.Table_Add_Colum("TestRecord","ScriptVersion", "Text")               
+                self.Table_Add_Colum("TestRecord_PEL3K","ScriptVersion", "Text")               
                 
                 query.prepare(f"Update TestScript set Version='' where Version IS NULL")      #把版本為NULL的, 改為空字串
                 query.exec_()
@@ -1523,7 +1523,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                             CondName_3, Cond_3, CondUnit_3, Expect, ExpectUnit, LowLimit, UpLimit, Cond_DUT, Cond_Equip, 
                             Measure_Main, Measure_1, Measure_2, Deviation, Deviation_Expect, Deviation_LowLimit, 
                             Deviation_UpLimit, Judge, Comment, Cond_Fixture, Cond_Fiixture_Other, Datetime_Upload 
-                            FROM TestRecord WHERE Datetime_Upload IS NULL            
+                            FROM TestRecord_PEL3K WHERE Datetime_Upload IS NULL            
                             ''')
             query.exec_()
             if query.lastError().text() !='':
@@ -1546,7 +1546,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                         c.append(query.value(i))
                 # 檢查 MariaDB 資料表 是否已經存在相同的記錄   
                 strSQL=(f"SELECT TestDocNo, ItemNo, SubItemNo, TestPointNo " + 
-                        f"FROM TestRecord " + 
+                        f"FROM TestRecord_PEL3K " + 
                         f"WHERE TestDocNo = '{c[1]}' AND ItemNo = {c[4]} AND SubItemNo = {c[5]} AND TestPointNo = {c[6]}")
                 
                 # print(strSQL)
@@ -1558,7 +1558,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                 # self.MariaDB.transaction()                
                 if rcount>0:
                     # 記錄已存在，使用更新方式
-                    strSQL=(f"UPDATE TestRecord SET TDatetime = '{c[0]}', " +  
+                    strSQL=(f"UPDATE TestRecord_PEL3K SET TDatetime = '{c[0]}', " +  
                             f"TestDocNo = '{c[1]}', ScriptName = '{c[2]}', ScriptVersion = '{c[3]}', ItemNo = {c[4]}, SubItemNo = {c[5]}, TestPointNo = {c[6]}, " + 
                             f"ItemName = '{c[7]}', ItemName_2t = '{c[8]}', ItemName_3t = '{c[9]}', CondName_1 = '{c[10]}', Cond_1 = '{c[11]}', " +
                             f"CondUnit_1 = '{c[12]}', CondName_2 = '{c[13]}', Cond_2 = '{c[14]}', CondUnit_2 = '{c[15]}', CondName_3 = '{c[16]}', " +
@@ -1572,7 +1572,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                     cur2.execute(strSQL)
                 else:
                     # 記錄不存在，使用新增方式
-                    strSQL=f"""INSERT INTO TestRecord (TDatetime, TestDocNo, ScriptName, ScriptVersion, ItemNo, SubItemNo, TestPointNo, ItemName, 
+                    strSQL=f"""INSERT INTO TestRecord_PEL3K (TDatetime, TestDocNo, ScriptName, ScriptVersion, ItemNo, SubItemNo, TestPointNo, ItemName, 
                                 ItemName_2t, ItemName_3t, CondName_1, Cond_1, CondUnit_1, CondName_2, Cond_2, CondUnit_2, 
                                 CondName_3, Cond_3, CondUnit_3, Expect, ExpectUnit, LowLimit, UpLimit, Cond_DUT, Cond_Equip, 
                                 Measure_Main, Measure_1, Measure_2, Deviation, Deviation_Expect, Deviation_LowLimit, 
@@ -1586,7 +1586,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                 conn.commit()
                 strSQLErr=query.lastError().text()                
                 if strSQLErr =="":
-                    query4.prepare(f"""UPDATE TestRecord SET Datetime_Upload = :c0 
+                    query4.prepare(f"""UPDATE TestRecord_PEL3K SET Datetime_Upload = :c0 
                                 WHERE TestDocNo = '{c[1]}' AND ItemNo = {c[4]} AND SubItemNo = {c[5]} AND TestPointNo = {c[6]}"""
                                 )
                     query4.bindValue(':c0', UpDateTime)
