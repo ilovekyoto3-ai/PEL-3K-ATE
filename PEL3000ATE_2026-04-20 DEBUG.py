@@ -3264,7 +3264,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                 i2t = str(r.value(TH.col_ItemName_2t)).upper().split()[-1]
                 i3t = str(r.value(TH.col_ItemName_3t)).upper().replace(" ","")
                 strM=i2t+i3t
-                print(strM)
+                print(strM)#5555555555555555555555
                 psw = self.select_psw(r.value(TH.col_Cond_DUT))
                 if psw is None:
                     raise RuntimeError("PSW 尚未初始化，無法 setOutput_State")
