@@ -3799,7 +3799,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                     "PEL-3041"  : COMMON_3041,"PEL-3041A"  : COMMON_3041,
                     "PEL-3041H" : COMMON_3041H,
                     "PEL-3111"  : COMMON_3111,"PEL-3111A"   : COMMON_3111,
-                    "PEL-3111H" : COMMON_3111H,"PEL-3111AH" : COMMON_3111H,
+                    "PEL-3111H" : COMMON_3111H,"PEL-3111AH" : COMMON_3111H, "LSG-1050AH":COMMON_3111H,
                     "PEL-3031E" : COMMON_3031E,"PEL-3031AE" : COMMON_3031E,
                     "PEL-3032E" : COMMON_3032E,"PEL-3032AE" : COMMON_3032E,
                             }
@@ -3813,7 +3813,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                 oper_mode = DUT_CR_MODE["Oper_Mode"]
                 if oper_mode == "MIDDLE":
                     oper_mode = "HIGH"
-
+                print(oper_mode)
                 model = next((m for m in FS_TABLE if m in DUT_CR_MODE["IDN"]), None)
 
                 PEL_CR_RE = round((1 / PEL_CR_SET) * 1000, 4)
@@ -3825,7 +3825,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                     
                     # LOW 模式使用不同標準計算
                     if oper_mode == "LOW":
-                        if model in ('PEL-3111H', 'LSG-1050AH', 'PEL-3111AH'):
+                        if model in ('PEL-3111H','LSG-1050AH','PEL-3111AH'):
                             PEL_CR_STANDARD = DMM_CR_MEAS_V * PEL_CR_RE / 1000
                             RL = PEL_CR_STANDARD - ((0.005 * PEL_CR_STANDARD) + (0.005 * FS)) + (DMM_CR_MEAS_V / V_DEN)
                             RU = PEL_CR_STANDARD + ((0.005 * PEL_CR_STANDARD) + (0.005 * FS)) + (DMM_CR_MEAS_V / V_DEN)
@@ -4011,7 +4011,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                                 'PEL-3111A':COMMON_3111,'PEL-3111':COMMON_3111,
                                 'PEL-3021H':COMMON_3021H,'PEL-3021AH':COMMON_3021H,
                                 'PEL-3041H':COMMON_3041H,'PEL-3041AH':COMMON_3041H,
-                                'PEL-3111H':COMMON_3111H,'PEL-3111AH':COMMON_3111H,
+                                'PEL-3111H':COMMON_3111H,'PEL-3111AH':COMMON_3111H, "LSG-1050AH":COMMON_3111H,
                                 'PEL-3031AE':COMMON_3031AE,
                                 'PEL-3032AE':COMMON_3032AE,
                                 }
@@ -4179,7 +4179,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                                 'PEL-3111A':     COMMON_3111,'PEL-3111':  COMMON_3111, 
                                 'PEL-3021H':    COMMON_3021H,'PEL-3021AH': COMMON_3021H,
                                 'PEL-3041H':    COMMON_3041H,'PEL-3041AH':    COMMON_3041H,
-                                'PEL-3111H':    COMMON_3111H,'PEL-3111AH':    COMMON_3111H,
+                                'PEL-3111H':    COMMON_3111H,'PEL-3111AH':    COMMON_3111H,   "LSG-1050AH":COMMON_3111H,
                                 'PEL-3031AE':   COMMON_3031AE,
                                 'PEL-3032AE':   COMMON_3032AE,
                                 }
@@ -4371,7 +4371,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                                 'PEL-3111A':COMMON_3111,'PEL-3111':COMMON_3111,
                                 'PEL-3021H':COMMON_3021H,
                                 'PEL-3041H':COMMON_3041H,
-                                'PEL-3111H':COMMON_3111H,
+                                'PEL-3111H':COMMON_3111H, 'LSG-1050AH':COMMON_3111H,
                                 'PEL-3031AE':COMMON_3031AE,
                                 'PEL-3032AE':COMMON_3032AE,
                                }
@@ -4398,7 +4398,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                     PL= PEL_CP_SET_POWER - ((0.6 / 100) * PEL_CP_SET_POWER + (1.4 / 100) * fs_eff) - (DMM_CP_MEAS_V * DMM_CP_MEAS_V / VAR)
                     PU= PEL_CP_SET_POWER + ((0.6 / 100) * PEL_CP_SET_POWER + (1.4 / 100) * fs_eff) + (DMM_CP_MEAS_V * DMM_CP_MEAS_V / VAR)
 
-                elif any(m in DUT_CP_MODE for m in('PEL-3021H','PEL-3041H','PEL-3111H')):
+                elif any(m in DUT_CP_MODE for m in('PEL-3021H','PEL-3041H','PEL-3111H','LSG-1050AH')):
                     PL= PEL_CP_SET_POWER - ((0.6 / 100) * PEL_CP_SET_POWER + (1.4 / 100) * fs_eff) + (DMM_CP_MEAS_V * DMM_CP_MEAS_V / VAR)
                     PU= PEL_CP_SET_POWER + ((0.6 / 100) * PEL_CP_SET_POWER + (1.4 / 100) * fs_eff) + (DMM_CP_MEAS_V * DMM_CP_MEAS_V / VAR)
 
@@ -4568,7 +4568,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                         'PEL-3111A':  {'COMMON': '3111'},'PEL-3111':  {'COMMON': '3111'},
                         'PEL-3021H': {'COMMON': '3021H'},'PEL-3021AH': {'COMMON': '3021H'},
                         'PEL-3041H': {'COMMON': '3041H'},'PEL-3041AH': {'COMMON': '3041H'},
-                        'PEL-3111H': {'COMMON': '3111H'},'PEL-3111AH': {'COMMON': '3111H'},
+                        'PEL-3111H': {'COMMON': '3111H'},'PEL-3111AH': {'COMMON': '3111H'},  'LSG-1050AH':{'COMMON': '3111H'},
                                 }
                 COMMON_CONFIG = {
                         '3021': {
@@ -4786,6 +4786,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                         'PEL-3021H': {'COMMON': '3021H'},'PEL-3021AH': {'COMMON': '3021H'},
                         'PEL-3041H': {'COMMON': '3041H'},'PEL-3041AH': {'COMMON': '3041H'},
                         'PEL-3111H': {'COMMON': '3111H'},'PEL-3111AH': {'COMMON': '3111H'},
+                        'LSG-1050AH':{'COMMON': '3111H'},
                                 }
                 COMMON_CONFIG = {
                         '3021H': {
