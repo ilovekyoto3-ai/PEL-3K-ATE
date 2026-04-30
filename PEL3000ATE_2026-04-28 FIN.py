@@ -3427,8 +3427,8 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                         CL = PEL_CC_SET_V - ((0.002 * PEL_CC_SET_V) + (0.001 * fs)) + (DMM_CC_MEAS_V / VAR_2)
                         CU = PEL_CC_SET_V + ((0.002 * PEL_CC_SET_V) + (0.001 * fs)) + (DMM_CC_MEAS_V / VAR_2)
                     elif mode == 'B' and oper_mode == 'LOW':
-                        CL = PEL_CC_SET_V - ((0.002 * PEL_CC_SET_V) + (0.001 * fs)) + (DMM_CC_MEAS_V / VAR_1 *1000)
-                        CU = PEL_CC_SET_V + ((0.002 * PEL_CC_SET_V) + (0.001 * fs)) + (DMM_CC_MEAS_V / VAR_1 *1000)
+                        CL = PEL_CC_SET_V - ((0.002 * PEL_CC_SET_V) + (0.001 * fs)) + (DMM_CC_MEAS_V / VAR_1)
+                        CU = PEL_CC_SET_V + ((0.002 * PEL_CC_SET_V) + (0.001 * fs)) + (DMM_CC_MEAS_V / VAR_1)
                     elif mode == 'C' and oper_mode == 'HIGH':
                         CL = PEL_CC_SET_V - ((0.002 * PEL_CC_SET_V) + (0.001 * fs)) + (DMM_CC_MEAS_V / VAR_1)
                         CU = PEL_CC_SET_V + ((0.002 * PEL_CC_SET_V) + (0.001 * fs)) + (DMM_CC_MEAS_V / VAR_1)
@@ -4586,10 +4586,16 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                         '3021H': {
                             'FS': {'LOW': 0.114285714, 'MIDDLE': 1.142857143, 'HIGH': 1.142857143},
                             'MODE': 'B',
+                            'PCS_SCALE':{
+                                        'LOW':1000
+                                        }
                         },
                         '3041H': {
                             'FS': {'LOW': 0.057142857, 'MIDDLE': 0.571428571, 'HIGH': 0.571428571},
                             'MODE': 'B',
+                            'PCS_SCALE':{
+                                        'LOW':1000
+                                        }
                         },
                         '3111H': {
                             'FS': {'LOW': 19.04761905, 'MIDDLE': 0.19047619, 'HIGH': 0.19047619},
@@ -4608,7 +4614,7 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                                 }
                 DUT_MODEL = self.DUT.get_IDN().split(",")[1].strip()
                 OPER_MODE = self.DUT.getCurrent_Range()   # 'LOW' / 'MID' / 'HIGH'
-
+                
                 model_key = MODEL_CONFIG[DUT_MODEL]['COMMON']
                 cfg = COMMON_CONFIG[model_key]
 
@@ -4617,8 +4623,14 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
 
                 tol = TOL_TABLE[OPER_MODE]
                 offset = OFFSET_TABLE[mode]
+                #我想要在COMMON_CONFIG裡面如果是3021H的時候base = PCS_read * fs 這個算式PCS_read先*1000其他的舊照原本的算式
+                pcs_scale_cfg = cfg.get('PCS_SCALE', 1)
 
-                base = PCS_read * fs
+                if isinstance(pcs_scale_cfg, dict): 
+                    scale = pcs_scale_cfg.get(OPER_MODE, 1)
+                else: 
+                    scale = pcs_scale_cfg
+                base = PCS_read * scale * fs
 
                 I_MOL = base - (base * tol['TOL_1'] + tol['TOL_2'] * offset)
                 I_MOU = base + (base * tol['TOL_1'] + tol['TOL_2'] * offset)
