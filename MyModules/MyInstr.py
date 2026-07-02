@@ -1062,7 +1062,13 @@ class PEL(Instrument):
     class Enum_Voltage_Range():
         Low='LOW' #Low range
         High='HIGH' #High range
+
+    class OCP_OPP_Value():
+        Limit='LIMIT'   #OCP Limit value
+        Loff='LOFF'     #OCP Loff value
+        Off='OFF'       #OCP Off value
         
+    
 
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
@@ -1751,8 +1757,110 @@ class PEL(Instrument):
     def INP_ONOFF(self):
         self.sendCommand(":INP ON")
     
+    #設定OCP電流值
+    def OCP_SET_CURRENT(self,A,**kwargs):
+        """
+        設定OCP電流值
+        參數:
+        **kwargs: delay_before=前置等待時間(秒),  delay_after 或 delay=程式結束前等待時間(秒)
+        """       
+        s=str(A).upper().strip()        
+        self.sendCommand(f':OCP {s}',**kwargs) 
+    
+    #設定OCP模式
+    def OCP_SET_MODE(self,A,**kwargs):
+        """
+        設定OCP模式
+        參數:
+        A: string => OCP mode, LIMIT => Limit the load, LOFF => Turn the load off, OFF => Turn the unit off
+        **kwargs: delay_before=前置等待時間(秒),  delay_after 或 delay=程式結束前等待時間(秒)
+        """       
+        s=str(A).upper().strip()
+        s1=None
+        if s in [str(self.OCP_OPP_Value.Limit).upper(), 'LIMIT']:
+            s1=f'LIMIT'
+        elif s in [str(self.OCP_OPP_Value.Loff).upper(), 'LOFF']:
+            s1=f'LOFF'
+        elif s in [str(self.OCP_OPP_Value.Off).upper(), 'OFF']:
+            s1=f'OFF'
+        if s1 is not None:
+            self.sendCommand(f':OCP {s1}',**kwargs)
+    
+    #設定OPP功率值
+    def OPP_SET_POWER(self,W,**kwargs):
+        """
+        設定OPP功率值
+        參數:
+        W:float => 功率W 
+        **kwargs: delay_before=前置等待時間(秒),  delay_after 或 delay=程式結束前等待時間(秒)
+        """
+        s=str(W).upper().strip()        
+        self.sendCommand(f':OPP {s}',**kwargs)
 
+    #設定OPP模式  
+    def OPP_SET_MODE(self,W,**kwargs):
+        """
+        設定OPP模式
+        參數:
+        W: string => OPP mode, LIMIT => Limit the load, LOFF => Turn the load off, OFF => Turn the unit off
+        **kwargs: delay_before=前置等待時間(秒),  delay_after 或 delay=程式結束前等待時間(秒)
+        """       
+        s=str(W).upper().strip()
+        s1=None
+        if s in [str(self.OCP_OPP_Value.Limit).upper(), 'LIMIT']:
+            s1=f'LIMIT'
+        elif s in [str(self.OCP_OPP_Value.Off).upper(), 'OFF']:
+            s1=f'OFF'
+        elif s in [str(self.OCP_OPP_Value.Loff).upper(), 'LOFF']:
+            s1=f'LOFF'
+        if s1 is not None:
+            self.sendCommand(f':OPP {s1}',**kwargs)
 
+    #設定OVP電壓直
+    def OVP_SET_VOLTAGE(self,V,**kwargs):
+        """
+        設定OVP電壓值
+        參數:
+        V:float => 電壓V 
+        **kwargs: delay_before=前置等待時間(秒),  delay_after 或 delay=程式結束前等待時間(秒)
+        """
+        s=str(V).upper().strip()        
+        self.sendCommand(f':OVP {s}',**kwargs)
+
+   
+    def Return_protect_status(self, **kwargs):
+        """
+        讀取可疑狀態條件暫存器 (Questionable Status Condition Register)
+        
+        參數:
+        **kwargs: delay_before=前置等待時間(秒), delay_after 或 delay=程式結束前等待時間(秒)
+        
+        返回值:
+        QuestionableCondition (IntFlag) 物件，若解析失敗則返回 None
+        """
+       
+        s = self.sendQuery(f':STAT:QUES:COND?',**kwargs)
+        s1=s.strip().replace("\n","").replace('\r','').replace(" ","")  
+
+        try:
+            val = int(s1.strip())
+
+            cond_map = {
+                1: "OV",
+                2: "OC",
+                8: "OP",
+                16: "OT",
+                512: "UV",
+                1024: "EXT",
+                2048: "REV",
+            }
+
+            return cond_map.get(val, "NONE")
+
+        except Exception:
+            return None
+
+        
 #**********  PSW物件  **********
 class DC_PS(Instrument):
  

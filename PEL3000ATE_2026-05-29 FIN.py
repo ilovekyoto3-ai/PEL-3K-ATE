@@ -913,8 +913,8 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
     BRList=[]       #使用的Baud Rate List
     SkipPort=[]     #使用大寫儲存不檢查的連接埤    
     #已程式完成項目, 讓測項自動預設勾選----------------------------------------------------------------------------------
-    OKItem=['CC Accuracy','CC Measurement Readback','CR Accuracy','CV Accuracy','CV Measurement Readback','CP Accuracy','CC BNC IMON Accuracy','CV BNC VMON Accuracy','電壓設定準確度','空戴漏電流確認', '空載漏電流確認', 'IR電壓設定準確度', 'IR電壓調整率', '電壓調整率'
-            ,'電壓量測準確度', '電流量測準確度','Cut off 電流準確度', 'IR絕緣阻抗量測準確度','GB電流設定準確度'
+    OKItem=['CC Accuracy','CC Measurement Readback','CR Accuracy','CV Accuracy','CV Measurement Readback','CP Accuracy','CC BNC IMON Accuracy','CV BNC VMON Accuracy'
+            ,'OCP Accuracy','OPP Accuracy','OVP Accuracy'
             ,'GB電阻量測準確度','寫入機器序號','背板輸出確認', '掃描功能確認', 'ARC功能確認', 'REMOTE功能確認'
             ,'Signal IO功能確認', 'GPIB功能確認','寫入USB識別碼','寫入USB識別碼確認','Initial','CONT電阻量測準確度','寫入機器日期時間']  
     #------------------------------------------------------------------------------------------------------------------     
@@ -3228,6 +3228,12 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                 sJudge=self.PEL_CC_IMON_Accuracy(IName,FixUse)
             elif IName in ['CV BNC VMON Accuracy']:
                 sJudge=self.PEL_CV_VMON_Accuracy(IName,FixUse)
+            elif IName in ['OCP Accuracy']:
+                sJudge=self.PEL_OCP_Accuracy(IName,FixUse)
+            elif IName in ['OPP Accuracy']:
+                sJudge=self.PEL_OPP_Accuracy(IName,FixUse)
+            elif IName in ['OVP Accuracy']:
+                sJudge=self.PEL_OVP_Accuracy(IName,FixUse)
         except Exception as e:
             self.txtMsg_append(f"{subProcName} Error: \n{str(e)}",Qt.red)
         self.FirstExecPQC=False          
@@ -3364,10 +3370,10 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
                         ]
                 MeasDut = "\n".join(MeasDut_List)
                 self.txtMsg_append(f"輸出前DUT狀態:\n{str(MeasDut)}")
-                psw.setOutput_State(1,delay_after=0.5)
+                psw.setOutput_State(1,delay_after=1)
                 self.DUT.setInput_State(1)
                 self.txtMsg_append(f"DUT_LOAD_ON...")
-                delay_time = 0.9  # 預設 delay
+                delay_time = 1.5  # 預設 delay
                 try:
                     idn = self.DUT.get_IDN()
                     print(f"DUT IDN: {idn}")
@@ -4887,6 +4893,237 @@ class MainTest(QtWidgets.QMdiSubWindow, Ui_frmMainTest):#UI 測試項目請在�
             serr=e        
         return sJudge
         
+
+    def PEL_OVP_Accuracy(self,strIName='',FixUse='all'):
+        print(f"PEL_OVP_Accuracy=>strIName:{strIName}, FixUse:{FixUse}")
+
+    
+    
+    def PEL_OCP_Accuracy(self,strIName='',FixUse='all'):
+        TH=recordHeader()
+        sJudge=''
+        try:
+            #if self.DUT.instrConnected==0 or not(PSW.instrConnected==1):     #確認此項需要的設備是否有連接
+             #   self.txtMsg_append(f"無法測試{strIName},待測機或PSW未連線",Qt.red)
+              #  self.delay(0.5)
+               # return sJudge
+            #if not(self.chkFixManual.isChecked()) and DIO.instrConnected==0:                                    #非手動換線又治具未連線
+             #   self.txtMsg_append(f"無法測試{strIName},未勾選手動接線治具且治具未連線",Qt.red)
+              #  self.delay(0.5)
+               # return sJudge   
+            #self.txtMsg_append(f"*** {strIName} ***",Qt.blue)
+            QtWidgets.QApplication.processEvents()
+            print(self.DUT.VisaDescription)
+            self.DUT.openPort()
+            self.DUT.CLS()
+            self.DUT.RST()
+            i2t=''
+            i3t=''
+            strM=''
+            for i in range(0,window.TRecord.model.rowCount()):                  #開始掃報告的每一列
+                QtWidgets.QApplication.processEvents()
+                if self.StopTest: break                                         #若已按停止鈕, 則不再執行迴圈 
+                if self.SpecTRow!=[] and not i in self.SpecTRow: continue       #有指定測試列, 但目前列, 不在指定測試列, 略過
+                r=window.TRecord.model.record(i)                                #取得目前指標列的內容
+                if not fnmatch(r.value(TH.col_ItemName),strIName): continue     #測試項名稱與此副程式要測試的項目不符, 略過
+                #print(f"FixUse=>{FixUse}, r.value(TH.col_Cond_Fixture)=>{r.value(TH.col_Cond_Fixture)}")
+                if not(FixUse=='all' or FixUse==r.value(TH.col_Cond_Fixture)): continue     #如果治具使用不是'all'且不是'對應的治具', 執行下一回圈.
+                if self.chkFixOptimize.isChecked()==False and not(r.value(TH.col_Cond_Fixture) in self.checkedFix):
+                    continue                #此治具没有勾選, 執行下一回圈
+                rStartTime=QDateTime.currentDateTime().toString(self.MyDTFormat)        #記錄此筆測試開始時間
+                self.txtMsg_append(f"{r.value(TH.col_ItemName)},{r.value(TH.col_ItemName_2t)},{r.value(TH.col_ItemName_3t)}, {r.value(TH.col_Cond_1)} {r.value(TH.col_CondUnit_1)} 確認中...")
+                self.Blank_TRecord(r)
+                rComment=''
+                rindex = window.TRecord.model.index(i, 0)
+                window.TRecord.model.TestRow=i
+                window.TRecord.tbview.scrollTo(rindex)
+                QtWidgets.QApplication.processEvents()
+                self.SwitchFix(r.value(TH.col_Cond_Fixture))   #切換治具                
+                self.delay(0.5)
+                stm=monotonic()                                 #設等待的時間起點
+                self.DUT.CLS()
+                PCS.RST()
+                PSW.RST()
+                DMM.RST()
+                PSW_H_A.RST()
+                PSW_H_V.RST()
+                DUT_CP_MODE=self.DUT.get_IDN().split(",")[1].strip()
+                self.DUT.setOper_Mode("CC")
+                #i2t=str(r.value(TH.col_ItemName_2t)).upper().replace(" ","")
+                #i3t=str(r.value(TH.col_ItemName_3t)).upper().replace(" ","")
+                i2t = str(r.value(TH.col_ItemName_2t)).upper().split()[-1]
+                i3t = str(r.value(TH.col_ItemName_3t)).upper().replace(" ","")
+                strM=i2t+i3t
+                psw = self.select_psw(r.value(TH.col_Cond_DUT))
+                if strM.find('LOW')>=0:
+                    self.DUT.setCurrent_Range("LOW")
+                    self.DUT.OCP_SET_CURRENT(r.value(TH.col_Cond_1))
+                    self.DUT.OCP_SET_MODE("LOFF")
+                    self.DUT.setCC_Current(round(float(r.value(TH.col_Cond_1)) * 0.95, 3))
+                    psw.setVoltage(r.value(TH.col_Cond_2))
+                    psw.setCurrent(r.value(TH.col_Cond_DUT))
+                    psw_vol=psw.getVoltage()
+                    print(f"{psw_vol}")
+                    PCS.setDCI(r.value(TH.col_Cond_3))
+
+                elif strM.find('MID')>=0:
+                    self.DUT.setCurrent_Range("MID")
+                    self.DUT.OCP_SET_CURRENT(r.value(TH.col_Cond_1))
+                    self.DUT.OCP_SET_MODE("LOFF")
+                    self.DUT.setCC_Current(round(float(r.value(TH.col_Cond_1)) * 0.95, 3))
+                    psw.setVoltage(r.value(TH.col_Cond_2))
+                    psw.setCurrent(r.value(TH.col_Cond_DUT))
+                    #PSW.setV_A(*str(r.value(TH.col_Cond_2)).split(','))
+                    psw_vol=psw.getVoltage()
+                    print(f"{psw_vol}")
+                    PCS.setDCI(r.value(TH.col_Cond_3))
+                    
+                elif strM.find('HIGH')>=0:
+                    self.DUT.setCurrent_Range("HIGH")
+                    self.DUT.OCP_SET_CURRENT(r.value(TH.col_Cond_1))
+                    self.DUT.OCP_SET_MODE("LOFF")
+                    self.DUT.setCC_Current(round(float(r.value(TH.col_Cond_1)) * 0.95, 3))   
+                    psw.setVoltage(r.value(TH.col_Cond_2))
+                    psw.setCurrent(r.value(TH.col_Cond_DUT))
+                    #PSW.setV_A(*str(r.value(TH.col_Cond_2)).split(','))
+                    psw_vol=psw.getVoltage()
+                    print(f"{psw_vol}")
+                    PCS.setDCI(r.value(TH.col_Cond_3))
+                
+                MeasDut_List = [
+                        f"Oper Mode: {self.DUT.getOper_Mode()}",
+                        f"Current Range: {self.DUT.getCurrent_Range()}",
+                        f"CC Current: {self.DUT.getCC_Current()}",
+                        ]
+                MeasDut = "\n".join(MeasDut_List)
+                self.txtMsg_append(f"輸出前DUT狀態:\n{str(MeasDut)}")
+                psw.setOutput_State(1,delay_before=0.5)    
+                self.DUT.setInput_State(1)
+                self.txtMsg_append(f"DUT_LOAD_ON...")
+                status=self.DUT.Return_protect_status()
+                if isnumber(r.value(TH.col_UpLimit)) and isnumber(r.value(TH.col_LowLimit)):
+
+                    low_limit = float(r.value(TH.col_LowLimit))
+                    up_limit = float(r.value(TH.col_UpLimit))
+                    dut_set = float(r.value(TH.col_Cond_1))
+                    if up_limit == low_limit:
+                        step = round(dut_set * 0.005, 3)   # 0.5%
+                    else:
+                        step = round((up_limit - low_limit) / 10, 3)
+                    search_low = low_limit - 5 * step
+                    search_high = up_limit + 5 * step
+                    Iset = self.DUT.setCC_Current(round(float(r.value(TH.col_Cond_1)) * 0.95, 3))
+
+                else:
+                    self.txtMsg_append(
+                        '規格上限或下限不為數值, 無法進行測試.',
+                        QColorConstants.Red
+                    )
+                    psw.setOutput_State(0)
+                    self.DUT.setInput_State(0)
+                    return
+
+                 # 判斷是否已進入保護
+                is_tripped = (status == 'OC')
+
+                # -------------------------
+                # 還沒觸發
+                # -------------------------
+                if not is_tripped:
+
+                    while not is_tripped and Iset <= search_high:
+
+                        Iset = round(Iset + step, 3)
+                        self.DUT.setCC_Current(Iset,delay_after=0.5)              
+                        status = self.DUT.Return_protect_status()
+                        is_tripped = (status == 'OC')
+
+                    # 回退一步
+                    Iset = round(Iset - step, 3)
+                    self.DUT.setCC_Current(Iset,delay_after=1)
+                    fine_step = round(step / 5, 3)
+                    status = self.DUT.Return_protect_status()
+                    is_tripped = (status == 'OC')
+
+                    while not is_tripped and Iset <= search_high:
+
+                        Iset = round(Iset + fine_step, 3)
+                        self.DUT.setCC_Current(Iset,delay_after=0.3)
+                        status = self.DUT.Return_protect_status()
+                        is_tripped = (status == 'OC')
+
+                # -------------------------
+                # 一開始就已觸發
+                # -------------------------
+                else:
+                    while is_tripped and Iset >= search_low:
+                        Iset = round(Iset - step, 3)
+                        self.DUT.setCC_Current(Iset)
+                        self.DUT.CLS()
+                        self.delay(0.5)
+                        status = self.DUT.Return_protect_status()
+                        is_tripped = (status == 'OC')
+                    fine_step = round(step / 5, 3)
+                    while not is_tripped and Iset <= search_high:
+                        Iset = round(Iset + fine_step, 3)
+                        self.DUT.setCC_Current(Iset)
+                        self.DUT.CLS()
+                        self.delay(0.3)
+                        status = self.DUT.Return_protect_status()
+                        is_tripped = (status == 'OC')
+
+                # 觸發值
+                OCP_Trip_Current = Iset
+
+                self.txtMsg_append(f"OCP觸發電流 = {OCP_Trip_Current:.3f}A")
+                
+                if strIName=='OCP Accuracy':
+                    M_Main = OCP_Trip_Current
+                    M_1 = None
+                    M_2 = None
+                    r.setValue(TH.col_Measure_Main, M_Main)
+                    #r.setValue(TH.col_Measure_1, M_1)
+                    #r.setValue(TH.col_Measure_2, M_2)
+                    if  r.value(TH.col_Measure_Main)!='':
+                        if r.value(TH.col_Measure_Main) > r.value(TH.col_LowLimit) and r.value(TH.col_Measure_Main) < r.value(TH.col_UpLimit):
+                            r.setValue(TH.col_Judge, 'PASS')                    
+                        else:
+                            r.setValue(TH.col_Judge, 'FAIL')
+                    else:
+                        r.setValue(TH.col_Judge, 'FAIL')
+                    self.Update_TRecord(r, True, rStartTime)
+                    psw.setOutput_State(0)
+                    self.DUT.setInput_State(0,delay_before=0.5)            
+                    self.DUT.CLS()
+                    self.txtMsg_append(f"DUT_LOAD_OFF.")
+                else:
+                    self.txtMsg_append(f"{inspect.currentframe().f_code.co_name} Error: \n{str(e)}",Qt.red)
+        
+        except Exception as e:
+            self.txtMsg_append(f"{inspect.currentframe().f_code.co_name} Error: \n{str(e)}",Qt.red)
+        finally:
+            PSW.setOutput_State(0,delay_after=1.5)
+            PSW_H_A.setOutput_State(0,delay_after=1.5)
+            PSW_H_V.setOutput_State(0)
+            self.DUT.CLS()
+            self.DUT.setInput_State(0)            #輸出OFF
+            self.DUT.closePort()
+            PSW.closePort()
+            PSW_H_A.closePort()
+            PSW_H_V.closePort()
+            sJudge=self.JudgeResult(strIName)   #判斷此測試PASS或FAIL
+            window.TRecord.model.TestRow=-1
+            try:
+                window.TRecord.tbview.scrollTo(rindex)  
+            except Exception as e:
+                serr=e        
+            return sJudge
+    
+    def PEL_OPP_Accuracy(self,strIName='',FixUse='all'):
+        print(f"PEL_OPP_Accuracy=>strIName:{strIName}, FixUse:{FixUse}")
+
+
+
 
 
     #Cut off 電流準確度
